@@ -53,6 +53,24 @@ func assignResults(data string, matches []int, results []interface{}) bool {
 				}
 				*v = int(i)
 			}
+		case *uint:
+			if u, err := strconv.ParseUint(s, 10, 64); err != nil {
+				return false
+			} else {
+				if uint64(uint(u)) != u {
+					return false
+				}
+				*v = uint(u)
+			}
+		case *uintptr:
+			if u, err := strconv.ParseUint(s, 10, 64); err != nil {
+				return false
+			} else {
+				if uint64(uintptr(u)) != u {
+					return false
+				}
+				*v = uintptr(u)
+			}
 		case func(string) bool:
 			if !v(s) {
 				return false
