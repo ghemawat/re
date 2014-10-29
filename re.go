@@ -45,9 +45,12 @@ func assignResults(data string, matches []int, results []interface{}) bool {
 				return false
 			}
 		case *int:
-			if i, err := strconv.ParseInt(s, 10, 32); err != nil {
+			if i, err := strconv.ParseInt(s, 10, 64); err != nil {
 				return false
 			} else {
+				if int64(int(i)) != i {
+					return false
+				}
 				*v = int(i)
 			}
 		case func(string) bool:
