@@ -4,7 +4,6 @@ import (
 	"re"
 	"reflect"
 	"regexp"
-	"test"
 	"testing"
 )
 
@@ -58,6 +57,10 @@ func TestFind(t *testing.T) {
 
 		// extraction into nil
 		c(`^(\w+):(\d+)$`, "host:1234", true, nil, nil, nil, nil),
+
+		// missing sub-expression
+		c(`^(\w+):((\d+))?`, "host:", true, nil, nil, nil, nil, nil, nil),
+		c(`^(\w+):((\d+))?`, "host:", false, nil, nil, new(int), nil, nil, nil),
 
 		// string
 		c(`(.*):\d+`, "host:1234", true, new(string), "host"),
@@ -143,8 +146,6 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "2147483648", false, new(int32), nil),
 		c(`(.*)`, "x", false, new(int32), nil),
 
-		// func
-
 		// combination of multiple arguments
 		c(`^(\w+):(\d+)$`, "host:5678", true, new(string), "host", new(int), 5678),
 	} {
@@ -176,22 +177,24 @@ func TestFind(t *testing.T) {
 
 func TestReFunc(t *testing.T) {
 	var arg string
-	f := func(a string) bool {
+	savearg := func(a string) bool {
 		arg = a
 		return true
 	}
-	test.Assert(t, re.Find(hp, "host:1234", f), "re.Find function")
-	test.Eq(t, "host", arg, "wrong argument to function called by Find")
-	test.Assert(t, re.Find(hp, "host:1234", nil, f), "re.Find function")
-	test.Eq(t, "1234", arg, "wrong argument to function called by Find")
-}
+	hp := `^(\w+):(\d+)$`
+	str := "host:1234"
+	if !re.Find(regexp.MustCompile(hp), str, savearg) {
+		t.Fatalf("Find(`%s`, `%s`, savearg): failed unexpectedly", hp, str)
+	}
+	if arg != "host" {
+		t.Fatalf("Find(`%s`, `%s`, savearg): did not call function", hp, str)
+	}
 
-func TestReFuncFailure(t *testing.T) {
-	var arg string
-	f := func(a string) bool {
+	fail := func(a string) bool {
 		arg = a
 		return false
 	}
-	test.Eq(t, false, re.Find(hp, "host:1234", f), "re.Find function")
-	test.Eq(t, "host", arg, "wrong argument to function called by Find")
+	if re.Find(regexp.MustCompile(hp), str, fail) {
+		t.Fatalf("Find(`%s`, `%s`, fail): succeeded unexpectedly", hp, str)
+	}
 }
