@@ -27,19 +27,6 @@ func assignResults(data string, matches []int, results []interface{}) bool {
 			*v = s
 		case *[]byte:
 			*v = []byte(s)
-		case *byte:
-			if len(s) != 1 {
-				return false
-			}
-			*v = s[0]
-		case *rune:
-			for i, r := range s {
-				if i > 0 {
-					// More than one rune
-					return false
-				}
-				*v = r
-			}
 		case *bool:
 			if !parseBool(s, v) {
 				return false
@@ -52,6 +39,24 @@ func assignResults(data string, matches []int, results []interface{}) bool {
 					return false
 				}
 				*v = int(i)
+			}
+		case *int8:
+			if i, err := strconv.ParseInt(s, 10, 8); err != nil {
+				return false
+			} else {
+				*v = int8(i)
+			}
+		case *int16:
+			if i, err := strconv.ParseInt(s, 10, 16); err != nil {
+				return false
+			} else {
+				*v = int16(i)
+			}
+		case *int32:
+			if i, err := strconv.ParseInt(s, 10, 32); err != nil {
+				return false
+			} else {
+				*v = int32(i)
 			}
 		case *uint:
 			if u, err := strconv.ParseUint(s, 10, 64); err != nil {
@@ -70,6 +75,30 @@ func assignResults(data string, matches []int, results []interface{}) bool {
 					return false
 				}
 				*v = uintptr(u)
+			}
+		case *uint8:
+			if u, err := strconv.ParseUint(s, 10, 8); err != nil {
+				return false
+			} else {
+				*v = uint8(u)
+			}
+		case *uint16:
+			if u, err := strconv.ParseUint(s, 10, 16); err != nil {
+				return false
+			} else {
+				*v = uint16(u)
+			}
+		case *uint32:
+			if u, err := strconv.ParseUint(s, 10, 32); err != nil {
+				return false
+			} else {
+				*v = uint32(u)
+			}
+		case *uint64:
+			if u, err := strconv.ParseUint(s, 10, 64); err != nil {
+				return false
+			} else {
+				*v = u
 			}
 		case func(string) bool:
 			if !v(s) {

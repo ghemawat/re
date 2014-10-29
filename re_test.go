@@ -66,15 +66,6 @@ func TestFind(t *testing.T) {
 		c(`(.*):\d+`, "host:1234", true, new([]byte), []byte("host")),
 		c(`(.*):\d+`, ":1234", true, new([]byte), []byte("")),
 
-		// byte
-		c(`(.*):\d+`, "x:1234", true, new(byte), byte('x')),
-		c(`(.*):\d+`, "xyz:1234", false, new(byte), nil),
-
-		// rune
-		c(`(.*):\d+`, "x:1234", true, new(rune), rune('x')),
-		c(`(.*):\d+`, "⌘:1234", true, new(rune), rune('⌘')),
-		c(`(.*):\d+`, "xyz:1234", false, new(rune), nil),
-
 		// boolean
 		c(`(\w+)`, "0", true, newtrue(), false),
 		c(`(\w+)`, "false", true, newtrue(), false),
@@ -103,12 +94,55 @@ func TestFind(t *testing.T) {
 		c(`(\d+)`, "1234", true, new(uintptr), uintptr(1234)),
 		c(`(\d+)`, "123456789123456789123456789", false, new(uintptr), nil),
 
+		// uint8
+		c(`(.*)`, "0", true, new(uint8), uint8(0)),
+		c(`(.*)`, "17", true, new(uint8), uint8(17)),
+		c(`(.*)`, "255", true, new(uint8), uint8(255)),
+		c(`(.*)`, "256", false, new(uint8), nil),
+		c(`(.*)`, "x", false, new(uint8), nil),
+
 		// uint16
+		c(`(.*)`, "0", true, new(uint16), uint16(0)),
+		c(`(.*)`, "17", true, new(uint16), uint16(17)),
+		c(`(.*)`, "65535", true, new(uint16), uint16(65535)),
+		c(`(.*)`, "65536", false, new(uint16), nil),
+		c(`(.*)`, "x", false, new(uint16), nil),
+
 		// uint32
+		c(`(.*)`, "0", true, new(uint32), uint32(0)),
+		c(`(.*)`, "17", true, new(uint32), uint32(17)),
+		c(`(.*)`, "4294967295", true, new(uint32), uint32(4294967295)),
+		c(`(.*)`, "4294967296", false, new(uint32), nil),
+		c(`(.*)`, "x", false, new(uint32), nil),
+
 		// uint64
+		c(`(.*)`, "0", true, new(uint64), uint64(0)),
+		c(`(.*)`, "17", true, new(uint64), uint64(17)),
+		c(`(.*)`, "18446744073709551615", true, new(uint64), uint64(18446744073709551615)),
+		c(`(.*)`, "18446744073709551616", false, new(uint64), nil),
+		c(`(.*)`, "x", false, new(uint64), nil),
+
 		// int8
+		c(`(.*)`, "0", true, new(int8), int8(0)),
+		c(`(.*)`, "17", true, new(int8), int8(17)),
+		c(`(.*)`, "127", true, new(int8), int8(127)),
+		c(`(.*)`, "128", false, new(int8), nil),
+		c(`(.*)`, "x", false, new(int8), nil),
+
 		// int16
+		c(`(.*)`, "0", true, new(int16), int16(0)),
+		c(`(.*)`, "17", true, new(int16), int16(17)),
+		c(`(.*)`, "32767", true, new(int16), int16(32767)),
+		c(`(.*)`, "32768", false, new(int16), nil),
+		c(`(.*)`, "x", false, new(int16), nil),
+
 		// int32
+		c(`(.*)`, "0", true, new(int32), int32(0)),
+		c(`(.*)`, "17", true, new(int32), int32(17)),
+		c(`(.*)`, "2147483647", true, new(int32), int32(2147483647)),
+		c(`(.*)`, "2147483648", false, new(int32), nil),
+		c(`(.*)`, "x", false, new(int32), nil),
+
 		// func
 
 		// combination of multiple arguments
