@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 )
 
 type testcase struct {
@@ -31,6 +32,14 @@ func newtrue() *bool {
 }
 
 func TestFind(t *testing.T) {
+	now := time.Now()
+	var nowText string
+	if n, err := now.MarshalText(); err != nil {
+		panic(err)
+	} else {
+		nowText = string(n)
+	}
+
 	for _, c := range []testcase{
 		// Tests without any argument extraction.
 		c(`(\w+):(\d+)`, "", false),
@@ -49,6 +58,9 @@ func TestFind(t *testing.T) {
 		// missing sub-expression
 		c(`^(\w+):((\d+))?`, "host:", true, nil, nil, nil, nil, nil, nil),
 		c(`^(\w+):((\d+))?`, "host:", false, nil, nil, new(int), nil, nil, nil),
+
+		// combination of multiple arguments
+		c(`(\w+):(\d+)`, "host:5678", true, new(string), "host", new(int), 5678),
 
 		// string
 		c(`(.*):\d+`, "host:1234", true, new(string), "host"),
@@ -136,8 +148,8 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "2147483648", false, new(int32), nil),
 		c(`(.*)`, "x", false, new(int32), nil),
 
-		// combination of multiple arguments
-		c(`(\w+):(\d+)`, "host:5678", true, new(string), "host", new(int), 5678),
+		// encoding.TextUnmarshaler
+		c(`(.*)`, nowText, true, new(time.Time), now),
 	} {
 		ok := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
 		if ok != c.result {
