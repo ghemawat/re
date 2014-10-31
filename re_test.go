@@ -131,6 +131,19 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "9223372036854775807", true, new(int64), int64(9223372036854775807)),
 		c(`(.*)`, "9223372036854775808", false, new(int64), nil),
 		c(`(.*)`, "x", false, new(int64), nil),
+
+		// float32
+		c(`(.*)`, "0", true, new(float32), float32(0)),
+		c(`(.*)`, "1.25e2", true, new(float32), float32(1.25e2)),
+		c(`(.*)`, "1e40", false, new(float32), nil),
+		c(`(.*)`, "x", false, new(float32), nil),
+
+		// float64
+		c(`(.*)`, "0", true, new(float64), float64(0)),
+		c(`(.*)`, "1.25e2", true, new(float64), float64(1.25e2)),
+		c(`(.*)`, "1e40", true, new(float64), float64(1e40)),
+		c(`(.*)`, "1e400", false, new(float64), nil),
+		c(`(.*)`, "x", false, new(float64), nil),
 	} {
 		err := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
 		if !c.result {
