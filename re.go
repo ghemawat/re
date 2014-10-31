@@ -27,17 +27,16 @@ import (
 //
 // nil: the corresponding sub-match is discarded without being saved.
 //
-// Pointer to a built-in numeric types (*int, *int8, *int16,
-// *int32, *int64, *uint, *uintptr, *uint8, *uint16, *uint32,
-// *uint64): The digits in the corresponding sub-match will be parsed
-// and the result stored into the pointed-to object.  Find will return
-// an error if the sub-match cannot be parsed successfully, or the
-// parse result is out of range.  Note that byte is equivalent to
-// uint8 and rune is equivalent to uint32.  These types are all
-// handled via textual parsing of digits (this matches fmt's behavior)
-// and therefore Find cannot be used to directly extract a single rune
-// ot byte in the input; for that, parse into a string or []byte and
-// use the first element.
+// Pointer to a built-in numeric types (*int, *int8, *int16, *int32,
+// *int64, *uint, *uintptr, *uint8, *uint16, *uint32, *uint64): The
+// digits in the corresponding sub-match will be parsed and the result
+// stored into the pointed-to object.  Find will return an error if
+// the sub-match cannot be parsed successfully, or the parse result is
+// out of range.  Note that since byte is identical to uint8 and rune
+// is identical to uint32, and these types are all handled via textual
+// parsing of digits (this matches fmt's behavior), Find cannot be
+// used to directly extract a single rune or byte in the input; for
+// that, parse into a string or []byte and use the first element.
 //
 // Pointer to string or []byte: the corresponding sub-match is
 // stored in the pointed-to object.  When storing into a []byte, no
