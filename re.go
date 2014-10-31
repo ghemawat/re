@@ -19,9 +19,11 @@ import (
 	"strconv"
 )
 
-// Find returns nil if regular expression re matches somewhere in input,
-// and for every non-nil result, the corresponding regular expression
-// sub-match is succesfully parsed and stored into *result[i].
+// Find returns nil if regular expression re matches somewhere in
+// input, and for every non-nil result, the corresponding regular
+// expression sub-match is succesfully parsed and stored into
+// *result[i].  Extra sub-matches (ones with no corresponding result)
+// are discarded silently.
 //
 // The following can be passed as result arguments to Find:
 //
@@ -29,15 +31,15 @@ import (
 //
 // Pointer to a built-in numeric types (*int, *int8, *int16, *int32,
 // *int64, *uint, *uintptr, *uint8, *uint16, *uint32, *uint64,
-// *float32, *float64): The digits in the corresponding sub-match will
-// be parsed and the result stored into the pointed-to object.  Find
-// will return an error if the sub-match cannot be parsed
-// successfully, or the parse result is out of range.  Note that since
-// byte is identical to uint8 and rune is identical to uint32, and
-// these types are all handled via textual parsing of digits (this
-// matches fmt's behavior), Find cannot be used to directly extract a
-// single rune or byte in the input; for that, parse into a string or
-// []byte and use the first element.
+// *float32, *float64): The corresponding sub-match will be parsed as
+// a literal of the numeric type and the result stored into the
+// pointed-to object.  Find will return an error if the sub-match
+// cannot be parsed successfully, or the parse result is out of range.
+// Note that since byte is identical to uint8 and rune is identical to
+// uint32, and these types are all handled via textual parsing of
+// digits (this matches fmt's behavior), Find cannot be used to
+// directly extract a single rune or byte in the input; for that,
+// parse into a string or []byte and use the first element.
 //
 // Pointer to string or []byte: the corresponding sub-match is
 // stored in the pointed-to object.  When storing into a []byte, no
