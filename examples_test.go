@@ -14,23 +14,24 @@ func check(err error) {
 	}
 }
 
+// Parse a line of ls -l output into its fields.
 func ExampleFind() {
-	// A regexp that matches a line of simplified ls -l output.
-	r := regexp.MustCompile(`^(.{10}) +(\d+) +(\w+) +(\w+) +(\d+) +(\S+) +(\S+)`)
-	var s struct {
+	var f struct {
 		mode, user, group, date, name string
 		nlinks, size                  int64
 	}
+	// A regexp that matches a line of simplified ls -l output.
+	r := regexp.MustCompile(`^(.{10}) +(\d+) +(\w+) +(\w+) +(\d+) +(\S+) +(\S+)`)
 	err := re.Find(r, []byte("-rwxr-xr-x 1 root root 110080 2014-03-24  /bin/ls"),
-		&s.mode, &s.nlinks, &s.user, &s.group, &s.size, &s.date, &s.name)
+		&f.mode, &f.nlinks, &f.user, &f.group, &f.size, &f.date, &f.name)
 	check(err)
-	fmt.Printf("%+v\n", s)
+	fmt.Printf("%+v\n", f)
 	// Output:
 	// {mode:-rwxr-xr-x user:root group:root date:2014-03-24 name:/bin/ls nlinks:1 size:110080}
 }
 
+// Use a custom parsing function that parses a number in binary.
 func ExampleFind_customParsing() {
-	// Define a function that parses a number in binary.
 	var number uint64
 	parseBinary := func(b []byte) (err error) {
 		number, err = strconv.ParseUint(string(b), 2, 64)
@@ -45,9 +46,8 @@ func ExampleFind_customParsing() {
 	// 9
 }
 
+// Define a reusable mechanism for parsing time.Duration and use it.
 func ExampleFind_supportNewType() {
-	// A function that returns a custom parser that parses into
-	// the specified *time.Duration.
 	parseDuration := func(d *time.Duration) func([]byte) error {
 		return func(b []byte) (err error) {
 			*d, err = time.ParseDuration(string(b))
