@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type input struct {
@@ -151,6 +152,12 @@ func assign(b []byte, r interface{}) error {
 			return err
 		} else {
 			*v = u
+		}
+	case *time.Duration:
+		if d, err := time.ParseDuration(string(b)); err != nil {
+			return err
+		} else {
+			*v = d
 		}
 	case encoding.TextUnmarshaler:
 		if err := v.UnmarshalText(b); err != nil {

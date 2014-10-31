@@ -2,7 +2,6 @@ package re_test
 
 import (
 	"fmt"
-	"os"
 	"re"
 	"reflect"
 	"regexp"
@@ -155,13 +154,13 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "2147483648", false, new(int32), nil),
 		c(`(.*)`, "x", false, new(int32), nil),
 
+		// time.Duration
+		c(`(.*)`, "3s", true, new(time.Duration), time.Second*3),
+
 		// encoding.TextUnmarshaler
 		c(`(.*)`, nowText, true, new(time.Time), now),
 	} {
 		err := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
 		if !c.result {
 			if err == nil {
 				t.Errorf("Find(`%s`, `%s`, ...) succeeded unexpectedly", c.re, c.input)
@@ -180,7 +179,7 @@ func TestFind(t *testing.T) {
 			// Dereference c.args[i] to get a T we can compare.
 			av := reflect.Indirect(reflect.ValueOf(a)).Interface()
 			if !reflect.DeepEqual(av, c.expected[i]) {
-				t.Errorf("Find(`%s`, `%s`, ...): result[%d] is %#v; expected %#v\n",
+				t.Errorf("Find(`%s`, `%s`, ...): result[%d] is %s; expected %s\n",
 					c.re, c.input, i, av, c.expected[i])
 			}
 
