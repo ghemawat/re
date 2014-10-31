@@ -22,25 +22,6 @@ import (
 	"time"
 )
 
-type input struct {
-	s string
-	b []byte
-}
-
-func (x input) str() string {
-	if x.b != nil {
-		return string(x.b)
-	}
-	return x.s
-}
-
-func (x input) bytes() []byte {
-	if x.b == nil {
-		return []byte(x.s)
-	}
-	return x.b
-}
-
 // Find returns true iff the regular expression re matches data, and
 // for every i in [0..len(results)-1] if result[i] is non-nil, the ith
 // sub-match (starting to count at zero) is succesfully parsed and
