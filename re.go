@@ -1,6 +1,14 @@
 /*
 Package re combines regular expression matching with fmt.Scan like extraction
-of sub-matches into caller-supplied objects.
+of sub-matches into caller-supplied objects.  For example, the host and port
+portions of a URL can be extracted as follows:
+
+	var host string
+	var port int
+	reg := regexp.MustCompile(`//([^/]+):(\d+)`)
+	if err := re.Find(reg, url, &host, &port); err == nil {
+		Process(host, port)
+	}
 */
 package re
 
@@ -11,7 +19,7 @@ import (
 	"strconv"
 )
 
-// Find returns nil if regular expression matches somewhere in input,
+// Find returns nil if regular expression re matches somewhere in input,
 // and for every non-nil result, the corresponding regular expression
 // sub-match is succesfully parsed and stored into *result[i].
 //
