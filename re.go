@@ -141,8 +141,8 @@ func assign(b []byte, r interface{}) error {
 			return err
 		}
 	default:
-		return parseError(fmt.Sprintf("unsupported type %s",
-			reflect.ValueOf(r).Type()), b)
+		t := reflect.ValueOf(r).Type()
+		return parseError(fmt.Sprintf("unsupported type %s", t), b)
 	}
 	return nil
 }
