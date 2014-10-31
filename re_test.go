@@ -200,3 +200,18 @@ func TestReFunc(t *testing.T) {
 		t.Fatalf("Find(`%s`, `%s`, fail): succeeded unexpectedly", hp, str)
 	}
 }
+
+func TestReAliasing(t *testing.T) {
+	b := []byte("hello")
+	var m []byte
+	if !re.Find(regexp.MustCompile(`(.*)`), b, &m) {
+		t.Fatalf("Find failed unexpectedly")
+	}
+	if string(m) != "hello" {
+		t.Fatalf("Find extracted wrong value")
+	}
+	b[0] = 'j'
+	if string(m) != "jello" {
+		t.Fatalf("extracted byte slice does not alias input")
+	}
+}
