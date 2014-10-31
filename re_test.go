@@ -217,10 +217,3 @@ func TestReAliasing(t *testing.T) {
 		t.Fatalf("extracted byte slice does not alias input")
 	}
 }
-
-// TODO: examples
-// . Simple match with extraction
-// . Use nil to skip a particular sub-match
-// . Provide fewer args than sub-matches
-// . Use a function to handle a custom type
-// . Use a function to perform hexadecimal parsing

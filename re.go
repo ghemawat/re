@@ -6,9 +6,11 @@ of sub-matches into caller-supplied objects.
 
 	var host string
 	var port int
-	if re.Find(hostport, "localhost:10000", &host, &port) {
-		...
+	if err := re.Find(hostport, "localhost:80", &host, &port); err != nil {
+		return err
 	}
+	// assert host == "localhost"
+	// assert port == 80
 */
 package re
 
