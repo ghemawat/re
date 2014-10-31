@@ -20,31 +20,55 @@ import (
 	"strconv"
 )
 
-// Find returns true iff the regular expression re matches data, and
-// for every i in [0..len(results)-1] if result[i] is non-nil, the ith
-// sub-match (starting to count at zero) is succesfully parsed and
-// stored into *result[i].
+// Find returns true iff the regular expression re occurs somewhere in
+// input, and for every non-nil result, the corresponding regular expression
+// sub-match is succesfully parsed and stored into *result[i].
 //
-// TODO: Document all supported types.
-// TODO: Give examples.
-func Find(re *regexp.Regexp, data []byte, results ...interface{}) error {
-	matches := re.FindSubmatchIndex(data)
+// The following can be passed as result arguments to Find:
+//
+// nil: the corresponding sub-match is discarded without being saved.
+//
+// Pointer to a built-in numeric types (*int, *int8, *int16,
+// *int32, *int64, *uint, *uintptr, *uint8, *uint16, *uint32,
+// *uint64): The digits in the corresponding sub-match will be parsed
+// and the result stored into the pointed-to object.  Find will return
+// an error if the sub-match cannot be parsed successfully, or the
+// parse result is out of range.  Note that byte is equivalent to
+// uint8 and rune is equivalent to uint32.  These types are all
+// handled via textual parsing of digits (this matches fmt's behavior)
+// and therefore Find cannot be used to directly extract a single rune
+// ot byte in the input; for that, parse into a string or []byte and
+// use the first element.
+//
+// Pointer to string or []byte: the corresponding sub-match is
+// stored in the pointed-to object.  When storing into a []byte, no
+// copying is done, and the stored slice is an alias of the input.
+//
+// func([]byte) error: the function is called with the corresponding
+// sub-match.  If the result is a non-nil error, the Find call
+// fails with that error.
+//
+// An error is returned if a result does not have one of the preceding
+// types.  Caveat: the set of supported types might be extended in the
+// future.
+func Find(re *regexp.Regexp, input []byte, result ...interface{}) error {
+	matches := re.FindSubmatchIndex(input)
 	if matches == nil {
 		return fmt.Errorf(`re.Find: could not find "%s" in "%s"`,
-			re, data)
+			re, input)
 	}
-	if len(matches) < 2+2*len(results) {
+	if len(matches) < 2+2*len(result) {
 		return fmt.Errorf(`re.Find: only got %d matches from "%s"; need at least %d`,
-			len(matches)/2-1, re, len(results))
+			len(matches)/2-1, re, len(result))
 	}
-	for i, r := range results {
+	for i, r := range result {
 		start, limit := matches[2+2*i], matches[2+2*i+1]
 		if start < 0 || limit < 0 {
 			// Sub-expression is missing; treat as empty.
 			start = 0
 			limit = 0
 		}
-		if err := assign(data[start:limit], r); err != nil {
+		if err := assign(input[start:limit], r); err != nil {
 			return err
 		}
 	}
@@ -89,6 +113,12 @@ func assign(b []byte, r interface{}) error {
 			return err
 		} else {
 			*v = int32(i)
+		}
+	case *int64:
+		if i, err := strconv.ParseInt(string(b), 0, 64); err != nil {
+			return err
+		} else {
+			*v = i
 		}
 	case *uint:
 		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {

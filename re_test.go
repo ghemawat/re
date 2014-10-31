@@ -144,6 +144,13 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "2147483647", true, new(int32), int32(2147483647)),
 		c(`(.*)`, "2147483648", false, new(int32), nil),
 		c(`(.*)`, "x", false, new(int32), nil),
+
+		// int64
+		c(`(.*)`, "0", true, new(int64), int64(0)),
+		c(`(.*)`, "17", true, new(int64), int64(17)),
+		c(`(.*)`, "9223372036854775807", true, new(int64), int64(9223372036854775807)),
+		c(`(.*)`, "9223372036854775808", false, new(int64), nil),
+		c(`(.*)`, "x", false, new(int64), nil),
 	} {
 		err := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
 		if !c.result {
@@ -210,3 +217,10 @@ func TestReAliasing(t *testing.T) {
 		t.Fatalf("extracted byte slice does not alias input")
 	}
 }
+
+// TODO: examples
+// . Simple match with extraction
+// . Use nil to skip a particular sub-match
+// . Provide fewer args than sub-matches
+// . Use a function to handle a custom type
+// . Use a function to perform hexadecimal parsing
