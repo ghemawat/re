@@ -5,7 +5,7 @@ portions of a URL can be extracted as follows:
 
 	var host string
 	var port int
-	reg := regexp.MustCompile(`//([^/]+):(\d+)`)
+	reg := regexp.MustCompile(`^https?://([^/:]+):(\d+)/`)
 	if err := re.Find(reg, url, &host, &port); err == nil {
 		Process(host, port)
 	}

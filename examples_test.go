@@ -21,12 +21,12 @@ func ExampleFind() {
 		nlinks, size                  int64
 	}
 
-	// A regexp that matches a line of simplified ls -l output.
+	// A regexp that matches a line of `ls -l --time-style=iso` output.
 	r := regexp.MustCompile(`^(.{10}) +(\d+) +(\w+) +(\w+) +(\d+) +(\S+) +(\S+)`)
 
-	// Match output to regexp and extract properties into struct.
-	err := re.Find(r, []byte("-rwxr-xr-x 1 root root 110080 2014-03-24  /bin/ls"),
-		&f.mode, &f.nlinks, &f.user, &f.group, &f.size, &f.date, &f.name)
+	// Match line to regexp and extract properties into struct.
+	line := "-rwxr-xr-x 1 root root 110080 2014-03-24  /bin/ls"
+	err := re.Find(r, []byte(line), &f.mode, &f.nlinks, &f.user, &f.group, &f.size, &f.date, &f.name)
 	check(err)
 	fmt.Printf("%+v\n", f)
 	// Output:
