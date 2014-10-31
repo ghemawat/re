@@ -1,16 +1,35 @@
 package re
 
 import (
+	"bytes"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
-func Find(r *regexp.Regexp, data string, results ...interface{}) bool {
-	return assignResults(data, r.FindStringSubmatchIndex(data), results)
+type input struct {
+	s string
+	b []byte
 }
 
-func assignResults(data string, matches []int, results []interface{}) bool {
+func (x input) str() string {
+	if x.b != nil {
+		return string(x.b)
+	}
+	return x.s
+}
+
+func (x input) bytes() []byte {
+	if x.b == nil {
+		return []byte(x.s)
+	}
+	return x.b
+}
+
+func Find(r *regexp.Regexp, data []byte, results ...interface{}) bool {
+	return assignResults(data, r.FindSubmatchIndex(data), results)
+}
+
+func assignResults(data []byte, matches []int, results []interface{}) bool {
 	if matches == nil {
 		return false
 	}
@@ -35,20 +54,20 @@ func assignResults(data string, matches []int, results []interface{}) bool {
 	return true
 }
 
-func assign(s string, r interface{}) bool {
+func assign(b []byte, r interface{}) bool {
 	switch v := r.(type) {
 	case nil:
 		// Discard the match.
 	case *string:
-		*v = s
+		*v = string(b)
 	case *[]byte:
-		*v = []byte(s)
+		*v = b
 	case *bool:
-		if !parseBool(s, v) {
+		if !parseBool(b, v) {
 			return false
 		}
 	case *int:
-		if i, err := strconv.ParseInt(s, 10, 64); err != nil {
+		if i, err := strconv.ParseInt(string(b), 0, 64); err != nil {
 			return false
 		} else {
 			if int64(int(i)) != i {
@@ -57,25 +76,25 @@ func assign(s string, r interface{}) bool {
 			*v = int(i)
 		}
 	case *int8:
-		if i, err := strconv.ParseInt(s, 10, 8); err != nil {
+		if i, err := strconv.ParseInt(string(b), 0, 8); err != nil {
 			return false
 		} else {
 			*v = int8(i)
 		}
 	case *int16:
-		if i, err := strconv.ParseInt(s, 10, 16); err != nil {
+		if i, err := strconv.ParseInt(string(b), 0, 16); err != nil {
 			return false
 		} else {
 			*v = int16(i)
 		}
 	case *int32:
-		if i, err := strconv.ParseInt(s, 10, 32); err != nil {
+		if i, err := strconv.ParseInt(string(b), 0, 32); err != nil {
 			return false
 		} else {
 			*v = int32(i)
 		}
 	case *uint:
-		if u, err := strconv.ParseUint(s, 10, 64); err != nil {
+		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
 			return false
 		} else {
 			if uint64(uint(u)) != u {
@@ -84,7 +103,7 @@ func assign(s string, r interface{}) bool {
 			*v = uint(u)
 		}
 	case *uintptr:
-		if u, err := strconv.ParseUint(s, 10, 64); err != nil {
+		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
 			return false
 		} else {
 			if uint64(uintptr(u)) != u {
@@ -93,52 +112,53 @@ func assign(s string, r interface{}) bool {
 			*v = uintptr(u)
 		}
 	case *uint8:
-		if u, err := strconv.ParseUint(s, 10, 8); err != nil {
+		// could treat as a number or a raw byte; match fmt and treat like a number
+		if u, err := strconv.ParseUint(string(b), 0, 8); err != nil {
 			return false
 		} else {
 			*v = uint8(u)
 		}
 	case *uint16:
-		if u, err := strconv.ParseUint(s, 10, 16); err != nil {
+		if u, err := strconv.ParseUint(string(b), 0, 16); err != nil {
 			return false
 		} else {
 			*v = uint16(u)
 		}
 	case *uint32:
-		if u, err := strconv.ParseUint(s, 10, 32); err != nil {
+		// could treat as a number or a rune; match fmt and treat like a number
+		if u, err := strconv.ParseUint(string(b), 0, 32); err != nil {
 			return false
 		} else {
 			*v = uint32(u)
 		}
 	case *uint64:
-		if u, err := strconv.ParseUint(s, 10, 64); err != nil {
+		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
 			return false
 		} else {
 			*v = u
 		}
-	case func(string) bool:
-		if !v(s) {
+	case func([]byte) bool:
+		if !v(b) {
 			return false
 		}
 	default:
 		return false
 	}
-	// TODO: support for numeric radices
-	// Find(..., CRadix(&x), ...)
-	// Find(..., Hex(&x), ...)
-	// Find(..., Octal(&x), ...)
-	// Find(..., Binary(&x), ...)
 	return true
 }
 
-func parseBool(s string, v *bool) bool {
-	if s == "0" || strings.ToLower(s) == "false" {
+func parseBool(b []byte, v *bool) bool {
+	switch {
+	case len(b) == 1 && b[0] == '0':
 		*v = false
-		return true
-	}
-	if s == "1" || strings.ToLower(s) == "true" {
+	case len(b) == 1 && b[0] == '1':
 		*v = true
-		return true
+	case len(b) == 5 && bytes.EqualFold(b, []byte("false")):
+		*v = false
+	case len(b) == 4 && bytes.EqualFold(b, []byte("true")):
+		*v = true
+	default:
+		return false
 	}
-	return false
+	return true
 }

@@ -88,6 +88,8 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "-1234", true, new(int), -1234),
 		c(`(.*)`, "123456789123456789123456789", false, new(int), nil),
 		c(`(.*)`, "-123456789123456789123456789", false, new(int), nil),
+		c(`(.*)`, "0x10", true, new(int), 0x10),
+		c(`(.*)`, "010", true, new(int), 010),
 
 		// uint
 		c(`(\d+)`, "1234", true, new(uint), uint(1234)),
@@ -149,7 +151,7 @@ func TestFind(t *testing.T) {
 		// combination of multiple arguments
 		c(`^(\w+):(\d+)$`, "host:5678", true, new(string), "host", new(int), 5678),
 	} {
-		ok := re.Find(regexp.MustCompile(c.re), c.input, c.args...)
+		ok := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
 		if ok != c.result {
 			if c.result {
 				t.Errorf("Find(`%s`, `%s`, ...) failed unexpectedly", c.re, c.input)
@@ -177,24 +179,24 @@ func TestFind(t *testing.T) {
 
 func TestReFunc(t *testing.T) {
 	var arg string
-	savearg := func(a string) bool {
-		arg = a
+	savearg := func(a []byte) bool {
+		arg = string(a)
 		return true
 	}
 	hp := `^(\w+):(\d+)$`
 	str := "host:1234"
-	if !re.Find(regexp.MustCompile(hp), str, savearg) {
+	if !re.Find(regexp.MustCompile(hp), []byte(str), savearg) {
 		t.Fatalf("Find(`%s`, `%s`, savearg): failed unexpectedly", hp, str)
 	}
 	if arg != "host" {
 		t.Fatalf("Find(`%s`, `%s`, savearg): did not call function", hp, str)
 	}
 
-	fail := func(a string) bool {
-		arg = a
+	fail := func(a []byte) bool {
+		arg = string(a)
 		return false
 	}
-	if re.Find(regexp.MustCompile(hp), str, fail) {
+	if re.Find(regexp.MustCompile(hp), []byte(str), fail) {
 		t.Fatalf("Find(`%s`, `%s`, fail): succeeded unexpectedly", hp, str)
 	}
 }
