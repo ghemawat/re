@@ -1,3 +1,15 @@
+/*
+Package re combines regular expression matching with fmt.Scan like extraction
+of sub-matches into caller-supplied objects.
+
+	hostport := regexp.MustCompile(`(\w+):(\d+)`)
+
+	var host string
+	var port int
+	if re.Find(hostport, "localhost:10000", &host, &port) {
+		...
+	}
+*/
 package re
 
 import (
@@ -25,8 +37,15 @@ func (x input) bytes() []byte {
 	return x.b
 }
 
-func Find(r *regexp.Regexp, data []byte, results ...interface{}) bool {
-	return assignResults(data, r.FindSubmatchIndex(data), results)
+// Find returns true iff the regular expression re matches data, and
+// for every i in [0..len(results)-1] if result[i] is non-nil, the ith
+// sub-match (starting to count at zero) is succesfully parsed and
+// stored into *result[i].
+//
+// TODO: Document all supported types.
+// TODO: Give examples.
+func Find(re *regexp.Regexp, data []byte, results ...interface{}) bool {
+	return assignResults(data, re.FindSubmatchIndex(data), results)
 }
 
 func assignResults(data []byte, matches []int, results []interface{}) bool {
@@ -40,12 +59,9 @@ func assignResults(data []byte, matches []int, results []interface{}) bool {
 	for i, r := range results {
 		start, limit := matches[2+2*i], matches[2+2*i+1]
 		if start < 0 || limit < 0 {
-			// Sub-expression is missing.  Allow match to nil.
-			switch r {
-			case nil:
-				return true
-			}
-			return false
+			// Sub-expression is missing; treat as empty.
+			start = 0
+			limit = 0
 		}
 		if !assign(data[start:limit], r) {
 			return false
