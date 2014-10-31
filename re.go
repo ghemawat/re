@@ -62,17 +62,21 @@ func Find(re *regexp.Regexp, input []byte, result ...interface{}) error {
 			start = 0
 			limit = 0
 		}
-		if err := assign(input[start:limit], r); err != nil {
+		if err := assign(r, input[start:limit]); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func assign(b []byte, r interface{}) error {
+func assign(r interface{}, b []byte) error {
 	switch v := r.(type) {
 	case nil:
 		// Discard the match.
+	case func([]byte) error:
+		if err := v(b); err != nil {
+			return err
+		}
 	case *string:
 		*v = string(b)
 	case *[]byte:
@@ -129,8 +133,6 @@ func assign(b []byte, r interface{}) error {
 			*v = uintptr(u)
 		}
 	case *uint8:
-		// could treat as a number or a raw byte; treat as a number
-		// (just like fmt)
 		if u, err := strconv.ParseUint(string(b), 0, 8); err != nil {
 			return err
 		} else {
@@ -143,8 +145,6 @@ func assign(b []byte, r interface{}) error {
 			*v = uint16(u)
 		}
 	case *uint32:
-		// could treat as a number or a rune; treat as a number
-		// (just like fmt)
 		if u, err := strconv.ParseUint(string(b), 0, 32); err != nil {
 			return err
 		} else {
@@ -155,10 +155,6 @@ func assign(b []byte, r interface{}) error {
 			return err
 		} else {
 			*v = u
-		}
-	case func([]byte) error:
-		if err := v(b); err != nil {
-			return err
 		}
 	default:
 		t := reflect.ValueOf(r).Type()
