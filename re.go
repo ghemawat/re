@@ -1,16 +1,6 @@
 /*
 Package re combines regular expression matching with fmt.Scan like extraction
 of sub-matches into caller-supplied objects.
-
-	hostport := regexp.MustCompile(`(\w+):(\d+)`)
-
-	var host string
-	var port int
-	if err := re.Find(hostport, "localhost:80", &host, &port); err != nil {
-		return err
-	}
-	// assert host == "localhost"
-	// assert port == 80
 */
 package re
 
@@ -22,8 +12,8 @@ import (
 	"strconv"
 )
 
-// Find returns true iff the regular expression re occurs somewhere in
-// input, and for every non-nil result, the corresponding regular expression
+// Find returns nil if regular expression matches somewhere in input,
+// and for every non-nil result, the corresponding regular expression
 // sub-match is succesfully parsed and stored into *result[i].
 //
 // The following can be passed as result arguments to Find:
@@ -47,8 +37,11 @@ import (
 // copying is done, and the stored slice is an alias of the input.
 //
 // func([]byte) error: the function is called with the corresponding
-// sub-match.  If the result is a non-nil error, the Find call
-// fails with that error.
+// sub-match.  If the result is a non-nil error, the Find call fails
+// with that error. Pass in such a function to provide custom parsing
+// of an already supported type (e.g., treating a number as decimal
+// even if it starts with "0"), or parsing for an unsupported type
+// (e.g., time.Duration).
 //
 // An error is returned if a result does not have one of the preceding
 // types.  Caveat: the set of supported types might be extended in the
