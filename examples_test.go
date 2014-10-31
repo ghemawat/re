@@ -15,62 +15,51 @@ func check(err error) {
 }
 
 func ExampleFind() {
-	var host string
-	var port int
-	r := regexp.MustCompile(`//([^/]+):(\d+)`)
-	check(re.Find(r, []byte("https://localhost:80/index.html"), &host, &port))
-	fmt.Println(host, port)
-	// Output:
-	// localhost 80
-}
-
-func ExampleFind_skipNilMatch() {
-	var port int
-	r := regexp.MustCompile(`(\w+):(\d+)`)
-	check(re.Find(r, []byte("localhost:80"), nil, &port))
-	// Passing nil caused the first sub-match to be discarded silently.
-	fmt.Println(port)
-	// Output:
-	// 80
-}
-
-func ExampleFind_skipTrailingMatches() {
-	r := regexp.MustCompile(`(\w+):(\d+)`)
-	var host string
-	check(re.Find(r, []byte("localhost:80"), &host))
-	// Passing fewer arguments than sub-matches caused the extra
-	// sub-matches to be discarded silently.
-	fmt.Println(host)
-	// Output:
-	// localhost
-}
-
-func ExampleFind_customType() {
-	// Define a function to parse a duration.
-	var interval time.Duration
-	parser := func(b []byte) (err error) {
-		interval, err = time.ParseDuration(string(b))
-		return err
+	// A regexp that matches a line of simplified ls -l output.
+	r := regexp.MustCompile(`^(.{10}) +(\d+) +(\w+) +(\w+) +(\d+) +(\S+) +(\S+)`)
+	var s struct {
+		mode, user, group, date, name string
+		nlinks, size                  int64
 	}
-
-	r := regexp.MustCompile(`(.*)`)
-	check(re.Find(r, []byte("3m20s"), parser))
-	fmt.Println(interval)
+	err := re.Find(r, []byte("-rwxr-xr-x 1 root root 110080 2014-03-24  /bin/ls"),
+		&s.mode, &s.nlinks, &s.user, &s.group, &s.size, &s.date, &s.name)
+	check(err)
+	fmt.Printf("%+v\n", s)
 	// Output:
-	// 3m20s
+	// {mode:-rwxr-xr-x user:root group:root date:2014-03-24 name:/bin/ls nlinks:1 size:110080}
 }
 
 func ExampleFind_customParsing() {
 	// Define a function that parses a number in binary.
 	var number uint64
-	parser := func(b []byte) (err error) {
+	parseBinary := func(b []byte) (err error) {
 		number, err = strconv.ParseUint(string(b), 2, 64)
 		return err
 	}
 
 	r := regexp.MustCompile(`([01]+)`)
-	check(re.Find(r, []byte("1001"), parser))
+	err := re.Find(r, []byte("1001"), parseBinary)
+	check(err)
 	fmt.Println(number)
 	// Output:
 	// 9
+}
+
+func ExampleFind_supportNewType() {
+	// A function that returns a custom parser that parses into
+	// the specified *time.Duration.
+	parseDuration := func(d *time.Duration) func([]byte) error {
+		return func(b []byte) (err error) {
+			*d, err = time.ParseDuration(string(b))
+			return err
+		}
+	}
+
+	r := regexp.MustCompile(`(.*)`)
+	var interval time.Duration
+	err := re.Find(r, []byte("3m20s"), parseDuration(&interval))
+	check(err)
+	fmt.Println(interval)
+	// Output:
+	// 3m20s
 }
