@@ -19,7 +19,6 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
-	"time"
 )
 
 // Find returns true iff the regular expression re matches data, and
@@ -32,10 +31,12 @@ import (
 func Find(re *regexp.Regexp, data []byte, results ...interface{}) error {
 	matches := re.FindSubmatchIndex(data)
 	if matches == nil {
-		return fmt.Errorf(`re.Find: could not find "%s" in "%s"`, re, data)
+		return fmt.Errorf(`re.Find: could not find "%s" in "%s"`,
+			re, data)
 	}
 	if len(matches) < 2+2*len(results) {
-		return fmt.Errorf(`re.Find: only got %d matches from "%s"; need at least %d`, len(matches)/2-1, re, len(results))
+		return fmt.Errorf(`re.Find: only got %d matches from "%s"; need at least %d`,
+			len(matches)/2-1, re, len(results))
 	}
 	for i, r := range results {
 		start, limit := matches[2+2*i], matches[2+2*i+1]
@@ -68,7 +69,7 @@ func assign(b []byte, r interface{}) error {
 			return err
 		} else {
 			if int64(int(i)) != i {
-				return makeError("out of range for int", b)
+				return parseError("out of range for int", b)
 			}
 			*v = int(i)
 		}
@@ -95,7 +96,7 @@ func assign(b []byte, r interface{}) error {
 			return err
 		} else {
 			if uint64(uint(u)) != u {
-				return makeError("out of range for uint", b)
+				return parseError("out of range for uint", b)
 			}
 			*v = uint(u)
 		}
@@ -104,12 +105,13 @@ func assign(b []byte, r interface{}) error {
 			return err
 		} else {
 			if uint64(uintptr(u)) != u {
-				return makeError("out of range for uintptr", b)
+				return parseError("out of range for uintptr", b)
 			}
 			*v = uintptr(u)
 		}
 	case *uint8:
-		// could treat as a number or a raw byte; match fmt and treat like a number
+		// could treat as a number or a raw byte; treat as a number
+		// (just like fmt)
 		if u, err := strconv.ParseUint(string(b), 0, 8); err != nil {
 			return err
 		} else {
@@ -122,7 +124,8 @@ func assign(b []byte, r interface{}) error {
 			*v = uint16(u)
 		}
 	case *uint32:
-		// could treat as a number or a rune; match fmt and treat like a number
+		// could treat as a number or a rune; treat as a number
+		// (just like fmt)
 		if u, err := strconv.ParseUint(string(b), 0, 32); err != nil {
 			return err
 		} else {
@@ -134,12 +137,6 @@ func assign(b []byte, r interface{}) error {
 		} else {
 			*v = u
 		}
-	case *time.Duration:
-		if d, err := time.ParseDuration(string(b)); err != nil {
-			return err
-		} else {
-			*v = d
-		}
 	case encoding.TextUnmarshaler:
 		if err := v.UnmarshalText(b); err != nil {
 			return err
@@ -149,7 +146,8 @@ func assign(b []byte, r interface{}) error {
 			return err
 		}
 	default:
-		return makeError(fmt.Sprintf("unsupported type %s", reflect.ValueOf(r).Type()), b)
+		return parseError(fmt.Sprintf("unsupported type %s",
+			reflect.ValueOf(r).Type()), b)
 	}
 	return nil
 }
@@ -165,11 +163,11 @@ func parseBool(b []byte, v *bool) error {
 	case len(b) == 4 && bytes.EqualFold(b, []byte("true")):
 		*v = true
 	default:
-		return makeError("not a valid bool", b)
+		return parseError("not a valid bool", b)
 	}
 	return nil
 }
 
-func makeError(explanation string, b []byte) error {
+func parseError(explanation string, b []byte) error {
 	return fmt.Errorf(`re.Find: parsing "%s": %s`, b, explanation)
 }

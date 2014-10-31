@@ -42,7 +42,6 @@ func TestFind(t *testing.T) {
 	} else {
 		nowText = string(n)
 	}
-
 	for _, c := range []testcase{
 		// Tests without any argument extraction.
 		c(`(\w+):(\d+)`, "", false),
@@ -53,17 +52,17 @@ func TestFind(t *testing.T) {
 		c(`^(\w+):(\d+)$`, "host:1234x", false, nil, nil),
 
 		// not enough matches
-		c(`^\w+:\d+$`, "host:1234", false, new(string), nil, new(int), nil),
+		c(`^\w+:\d+$`, "host:1234", false, new(string), nil),
 
 		// extraction into nil
 		c(`^(\w+):(\d+)$`, "host:1234", true, nil, nil, nil, nil),
 
 		// missing sub-expression
 		c(`^(\w+):((\d+))?`, "host:", true, nil, nil, nil, nil, nil, nil),
-		c(`^(\w+):((\d+))?`, "host:", false, nil, nil, new(int), nil, nil, nil),
+		c(`^(\w+):((\d+))?`, "host:", false, nil, nil, new(int), nil),
 
 		// combination of multiple arguments
-		c(`(\w+):(\d+)`, "host:5678", true, new(string), "host", new(int), 5678),
+		c(`(\w+):(\d+)`, "h:80", true, new(string), "h", new(int), 80),
 
 		// unsupported type
 		c(`(.*)`, "1234", false, new(mytype), nil),
@@ -153,9 +152,6 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "2147483647", true, new(int32), int32(2147483647)),
 		c(`(.*)`, "2147483648", false, new(int32), nil),
 		c(`(.*)`, "x", false, new(int32), nil),
-
-		// time.Duration
-		c(`(.*)`, "3s", true, new(time.Duration), time.Second*3),
 
 		// encoding.TextUnmarshaler
 		c(`(.*)`, nowText, true, new(time.Time), now),
