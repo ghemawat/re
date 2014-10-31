@@ -16,7 +16,7 @@ import (
 	"bytes"
 	"encoding"
 	"fmt"
-	"os"
+	"reflect"
 	"regexp"
 	"strconv"
 )
@@ -47,17 +47,13 @@ func (x input) bytes() []byte {
 //
 // TODO: Document all supported types.
 // TODO: Give examples.
-func Find(re *regexp.Regexp, data []byte, results ...interface{}) bool {
-	return assignResults(data, re.FindSubmatchIndex(data), results)
-}
-
-func assignResults(data []byte, matches []int, results []interface{}) bool {
+func Find(re *regexp.Regexp, data []byte, results ...interface{}) error {
+	matches := re.FindSubmatchIndex(data)
 	if matches == nil {
-		return false
+		return fmt.Errorf(`re.Find: could not find "%s" in "%s"`, re, data)
 	}
 	if len(matches) < 2+2*len(results) {
-		// Not enough matches to fill all results
-		return false
+		return fmt.Errorf(`re.Find: only got %d matches from "%s"; need at least %d`, len(matches)/2-1, re, len(results))
 	}
 	for i, r := range results {
 		start, limit := matches[2+2*i], matches[2+2*i+1]
@@ -66,14 +62,14 @@ func assignResults(data []byte, matches []int, results []interface{}) bool {
 			start = 0
 			limit = 0
 		}
-		if !assign(data[start:limit], r) {
-			return false
+		if err := assign(data[start:limit], r); err != nil {
+			return err
 		}
 	}
-	return true
+	return nil
 }
 
-func assign(b []byte, r interface{}) bool {
+func assign(b []byte, r interface{}) error {
 	switch v := r.(type) {
 	case nil:
 		// Discard the match.
@@ -82,96 +78,95 @@ func assign(b []byte, r interface{}) bool {
 	case *[]byte:
 		*v = b
 	case *bool:
-		if !parseBool(b, v) {
-			return false
+		if err := parseBool(b, v); err != nil {
+			return err
 		}
 	case *int:
 		if i, err := strconv.ParseInt(string(b), 0, 64); err != nil {
-			return false
+			return err
 		} else {
 			if int64(int(i)) != i {
-				return false
+				return makeError("out of range for int", b)
 			}
 			*v = int(i)
 		}
 	case *int8:
 		if i, err := strconv.ParseInt(string(b), 0, 8); err != nil {
-			return false
+			return err
 		} else {
 			*v = int8(i)
 		}
 	case *int16:
 		if i, err := strconv.ParseInt(string(b), 0, 16); err != nil {
-			return false
+			return err
 		} else {
 			*v = int16(i)
 		}
 	case *int32:
 		if i, err := strconv.ParseInt(string(b), 0, 32); err != nil {
-			return false
+			return err
 		} else {
 			*v = int32(i)
 		}
 	case *uint:
 		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
-			return false
+			return err
 		} else {
 			if uint64(uint(u)) != u {
-				return false
+				return makeError("out of range for uint", b)
 			}
 			*v = uint(u)
 		}
 	case *uintptr:
 		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
-			return false
+			return err
 		} else {
 			if uint64(uintptr(u)) != u {
-				return false
+				return makeError("out of range for uintptr", b)
 			}
 			*v = uintptr(u)
 		}
 	case *uint8:
 		// could treat as a number or a raw byte; match fmt and treat like a number
 		if u, err := strconv.ParseUint(string(b), 0, 8); err != nil {
-			return false
+			return err
 		} else {
 			*v = uint8(u)
 		}
 	case *uint16:
 		if u, err := strconv.ParseUint(string(b), 0, 16); err != nil {
-			return false
+			return err
 		} else {
 			*v = uint16(u)
 		}
 	case *uint32:
 		// could treat as a number or a rune; match fmt and treat like a number
 		if u, err := strconv.ParseUint(string(b), 0, 32); err != nil {
-			return false
+			return err
 		} else {
 			*v = uint32(u)
 		}
 	case *uint64:
 		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
-			return false
+			return err
 		} else {
 			*v = u
 		}
 	case encoding.TextUnmarshaler:
 		if err := v.UnmarshalText(b); err != nil {
-			fmt.Fprintln(os.Stderr, "here", err)
-			return false
+			return err
 		}
-	case func([]byte) bool:
-		if !v(b) {
-			return false
+	case func([]byte) error:
+		if err := v(b); err != nil {
+			return err
 		}
 	default:
-		return false
+		return makeError(fmt.Sprintf("unsupported type %s", reflect.ValueOf(r).Type()), b)
 	}
-	return true
+	return nil
 }
 
-func parseBool(b []byte, v *bool) bool {
+func parseBool(b []byte, v *bool) error {
 	switch {
 	case len(b) == 1 && b[0] == '0':
 		*v = false
@@ -182,7 +177,11 @@ func parseBool(b []byte, v *bool) bool {
 	case len(b) == 4 && bytes.EqualFold(b, []byte("true")):
 		*v = true
 	default:
-		return false
+		return makeError("not a valid bool", b)
 	}
-	return true
+	return nil
+}
+
+func makeError(explanation string, b []byte) error {
+	return fmt.Errorf(`re.Find: parsing "%s": %s`, b, explanation)
 }

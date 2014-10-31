@@ -1,6 +1,8 @@
 package re_test
 
 import (
+	"fmt"
+	"os"
 	"re"
 	"reflect"
 	"regexp"
@@ -15,6 +17,8 @@ type testcase struct {
 	args     []interface{}
 	expected []interface{}
 }
+
+type mytype int
 
 func c(re, input string, result bool, argexpect ...interface{}) testcase {
 	t := testcase{re, input, result, nil, nil}
@@ -61,6 +65,9 @@ func TestFind(t *testing.T) {
 
 		// combination of multiple arguments
 		c(`(\w+):(\d+)`, "host:5678", true, new(string), "host", new(int), 5678),
+
+		// unsupported type
+		c(`(.*)`, "1234", false, new(mytype), nil),
 
 		// string
 		c(`(.*):\d+`, "host:1234", true, new(string), "host"),
@@ -151,16 +158,18 @@ func TestFind(t *testing.T) {
 		// encoding.TextUnmarshaler
 		c(`(.*)`, nowText, true, new(time.Time), now),
 	} {
-		ok := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
-		if ok != c.result {
-			if c.result {
-				t.Errorf("Find(`%s`, `%s`, ...) failed unexpectedly", c.re, c.input)
-			} else {
+		err := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		if !c.result {
+			if err == nil {
 				t.Errorf("Find(`%s`, `%s`, ...) succeeded unexpectedly", c.re, c.input)
 			}
 			continue
 		}
-		if !ok {
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
 			continue
 		}
 		for i, a := range c.args {
@@ -181,24 +190,24 @@ func TestFind(t *testing.T) {
 
 func TestReFunc(t *testing.T) {
 	var arg string
-	savearg := func(a []byte) bool {
+	savearg := func(a []byte) error {
 		arg = string(a)
-		return true
+		return nil
 	}
 	hp := `^(\w+):(\d+)$`
 	str := "host:1234"
-	if !re.Find(regexp.MustCompile(hp), []byte(str), savearg) {
-		t.Fatalf("Find(`%s`, `%s`, savearg): failed unexpectedly", hp, str)
+	if err := re.Find(regexp.MustCompile(hp), []byte(str), savearg); err != nil {
+		t.Fatalf("unexpected error: %s", err)
 	}
 	if arg != "host" {
 		t.Fatalf("Find(`%s`, `%s`, savearg): did not call function", hp, str)
 	}
 
-	fail := func(a []byte) bool {
+	fail := func(a []byte) error {
 		arg = string(a)
-		return false
+		return fmt.Errorf("error")
 	}
-	if re.Find(regexp.MustCompile(hp), []byte(str), fail) {
+	if err := re.Find(regexp.MustCompile(hp), []byte(str), fail); err == nil {
 		t.Fatalf("Find(`%s`, `%s`, fail): succeeded unexpectedly", hp, str)
 	}
 }
@@ -206,8 +215,8 @@ func TestReFunc(t *testing.T) {
 func TestReAliasing(t *testing.T) {
 	b := []byte("hello")
 	var m []byte
-	if !re.Find(regexp.MustCompile(`(.*)`), b, &m) {
-		t.Fatalf("Find failed unexpectedly")
+	if err := re.Find(regexp.MustCompile(`(.*)`), b, &m); err != nil {
+		t.Fatalf("unexpected error: %s", err)
 	}
 	if string(m) != "hello" {
 		t.Fatalf("Find extracted wrong value")
