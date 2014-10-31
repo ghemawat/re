@@ -7,19 +7,6 @@ import (
 	"testing"
 )
 
-// Table driven testing; data per case:
-//	regexp
-//	string
-//	list of objects that are filled in
-//	expected result from function
-//	expected value for objects: list of <values>
-//      perhaps replace expected value list with a function that checks?
-
-var (
-	hp  = regexp.MustCompile(`(\w+):(\d+)`)
-	all = regexp.MustCompile(`(.*)`)
-)
-
 type testcase struct {
 	re       string
 	input    string
@@ -48,6 +35,7 @@ func TestFind(t *testing.T) {
 		// Tests without any argument extraction.
 		c(`(\w+):(\d+)`, "", false),
 		c(`(\w+):(\d+)`, "host:1234x", true),
+		c(`(\w+):(\d+)`, "-host:1234-", true),
 		c(`(\w+):(\d+)`, "host:x1234", false),
 		c(`^(\w+):(\d+)$`, "host:1234", true, nil, nil),
 		c(`^(\w+):(\d+)$`, "host:1234x", false, nil, nil),
@@ -149,7 +137,7 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "x", false, new(int32), nil),
 
 		// combination of multiple arguments
-		c(`^(\w+):(\d+)$`, "host:5678", true, new(string), "host", new(int), 5678),
+		c(`(\w+):(\d+)`, "host:5678", true, new(string), "host", new(int), 5678),
 	} {
 		ok := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
 		if ok != c.result {
@@ -167,6 +155,8 @@ func TestFind(t *testing.T) {
 			if a == nil && c.expected[i] == nil {
 				continue
 			}
+			// c.args[i] wraps a *T and c.expected[i] wraps a T.
+			// Dereference c.args[i] to get a T we can compare.
 			av := reflect.Indirect(reflect.ValueOf(a)).Interface()
 			if !reflect.DeepEqual(av, c.expected[i]) {
 				t.Errorf("Find(`%s`, `%s`, ...): result[%d] is %#v; expected %#v\n",
