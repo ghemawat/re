@@ -5,7 +5,6 @@ of sub-matches into caller-supplied objects.
 package re
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -78,10 +77,6 @@ func assign(b []byte, r interface{}) error {
 		*v = string(b)
 	case *[]byte:
 		*v = b
-	case *bool:
-		if err := parseBool(b, v); err != nil {
-			return err
-		}
 	case *int:
 		if i, err := strconv.ParseInt(string(b), 0, 64); err != nil {
 			return err
@@ -168,22 +163,6 @@ func assign(b []byte, r interface{}) error {
 	default:
 		t := reflect.ValueOf(r).Type()
 		return parseError(fmt.Sprintf("unsupported type %s", t), b)
-	}
-	return nil
-}
-
-func parseBool(b []byte, v *bool) error {
-	switch {
-	case len(b) == 1 && b[0] == '0':
-		*v = false
-	case len(b) == 1 && b[0] == '1':
-		*v = true
-	case len(b) == 5 && bytes.EqualFold(b, []byte("false")):
-		*v = false
-	case len(b) == 4 && bytes.EqualFold(b, []byte("true")):
-		*v = true
-	default:
-		return parseError("not a valid bool", b)
 	}
 	return nil
 }

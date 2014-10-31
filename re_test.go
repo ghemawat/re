@@ -27,12 +27,6 @@ func c(re, input string, result bool, argexpect ...interface{}) testcase {
 	return t
 }
 
-func newtrue() *bool {
-	r := new(bool)
-	*r = true
-	return r
-}
-
 func TestFind(t *testing.T) {
 	for _, c := range []testcase{
 		// Tests without any argument extraction.
@@ -65,20 +59,6 @@ func TestFind(t *testing.T) {
 		// []byte
 		c(`(.*):\d+`, "host:1234", true, new([]byte), []byte("host")),
 		c(`(.*):\d+`, ":1234", true, new([]byte), []byte("")),
-
-		// boolean
-		c(`(\w+)`, "0", true, newtrue(), false),
-		c(`(\w+)`, "false", true, newtrue(), false),
-		c(`(\w+)`, "False", true, newtrue(), false),
-		c(`(\w+)`, "1", true, new(bool), true),
-		c(`(\w+)`, "true", true, new(bool), true),
-		c(`(\w+)`, "True", true, new(bool), true),
-		c(`(\w+)`, "x0", false, new(bool), false),
-		c(`(\w+)`, "xfalse", false, new(bool), false),
-		c(`(\w+)`, "falsex", false, new(bool), false),
-		c(`(\w+)`, "x1", false, new(bool), true),
-		c(`(\w+)`, "xtrue", false, new(bool), true),
-		c(`(\w+)`, "truex", false, new(bool), true),
 
 		// int
 		c(`(\d+)`, "1234", true, new(int), 1234),
