@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
-	"time"
 )
 
 type testcase struct {
@@ -35,13 +34,6 @@ func newtrue() *bool {
 }
 
 func TestFind(t *testing.T) {
-	now := time.Now()
-	var nowText string
-	if n, err := now.MarshalText(); err != nil {
-		panic(err)
-	} else {
-		nowText = string(n)
-	}
 	for _, c := range []testcase{
 		// Tests without any argument extraction.
 		c(`(\w+):(\d+)`, "", false),
@@ -152,9 +144,6 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "2147483647", true, new(int32), int32(2147483647)),
 		c(`(.*)`, "2147483648", false, new(int32), nil),
 		c(`(.*)`, "x", false, new(int32), nil),
-
-		// encoding.TextUnmarshaler
-		c(`(.*)`, nowText, true, new(time.Time), now),
 	} {
 		err := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
 		if !c.result {

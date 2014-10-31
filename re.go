@@ -14,7 +14,6 @@ package re
 
 import (
 	"bytes"
-	"encoding"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -136,10 +135,6 @@ func assign(b []byte, r interface{}) error {
 			return err
 		} else {
 			*v = u
-		}
-	case encoding.TextUnmarshaler:
-		if err := v.UnmarshalText(b); err != nil {
-			return err
 		}
 	case func([]byte) error:
 		if err := v(b); err != nil {
