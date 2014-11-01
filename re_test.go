@@ -145,7 +145,7 @@ func TestFind(t *testing.T) {
 		c(`(.*)`, "1e400", false, new(float64), nil),
 		c(`(.*)`, "x", false, new(float64), nil),
 	} {
-		err := re.Find(regexp.MustCompile(c.re), []byte(c.input), c.args...)
+		err := re.Scan(regexp.MustCompile(c.re), []byte(c.input), c.args...)
 		if !c.result {
 			if err == nil {
 				t.Errorf("Find(`%s`, `%s`, ...) succeeded unexpectedly", c.re, c.input)
@@ -180,7 +180,7 @@ func TestReFunc(t *testing.T) {
 	}
 	hp := `^(\w+):(\d+)$`
 	str := "host:1234"
-	if err := re.Find(regexp.MustCompile(hp), []byte(str), savearg); err != nil {
+	if err := re.Scan(regexp.MustCompile(hp), []byte(str), savearg); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	if arg != "host" {
@@ -191,7 +191,7 @@ func TestReFunc(t *testing.T) {
 		arg = string(a)
 		return fmt.Errorf("error")
 	}
-	if err := re.Find(regexp.MustCompile(hp), []byte(str), fail); err == nil {
+	if err := re.Scan(regexp.MustCompile(hp), []byte(str), fail); err == nil {
 		t.Fatalf("Find(`%s`, `%s`, fail): succeeded unexpectedly", hp, str)
 	}
 }
@@ -199,7 +199,7 @@ func TestReFunc(t *testing.T) {
 func TestReAliasing(t *testing.T) {
 	b := []byte("hello")
 	var m []byte
-	if err := re.Find(regexp.MustCompile(`(.*)`), b, &m); err != nil {
+	if err := re.Scan(regexp.MustCompile(`(.*)`), b, &m); err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	if string(m) != "hello" {

@@ -6,7 +6,7 @@ portions of a URL can be extracted as follows:
 	var host string
 	var port int
 	reg := regexp.MustCompile(`^https?://([^/:]+):(\d+)/`)
-	if err := re.Find(reg, url, &host, &port); err == nil {
+	if err := re.Scan(reg, url, &host, &port); err == nil {
 		Process(host, port)
 	}
 */
@@ -19,53 +19,54 @@ import (
 	"strconv"
 )
 
-// Find returns nil if regular expression re matches somewhere in
-// input, and for every non-nil result, the corresponding regular
-// expression sub-match is succesfully parsed and stored into
-// *result[i].  Extra sub-matches (ones with no corresponding result)
-// are discarded silently.
+// Scan returns nil if regular expression re matches somewhere in
+// input, and for every non-nil entry in output, the corresponding
+// regular expression sub-match is succesfully parsed and stored into
+// *output[i].
 //
-// The following can be passed as result arguments to Find:
+// The following can be passed as output arguments to Scan:
 //
-// nil: the corresponding sub-match is discarded without being saved.
+// nil: The corresponding sub-match is discarded without being saved.
 //
 // Pointer to a built-in numeric types (*int, *int8, *int16, *int32,
 // *int64, *uint, *uintptr, *uint8, *uint16, *uint32, *uint64,
 // *float32, *float64): The corresponding sub-match will be parsed as
-// a literal of the numeric type and the result stored into the
-// pointed-to object.  Find will return an error if the sub-match
-// cannot be parsed successfully, or the parse result is out of range.
-// Note that since byte is identical to uint8 and rune is identical to
+// a literal of the numeric type and the result stored into
+// *output[i].  Scan will return an error if the sub-match cannot be
+// parsed successfully, or the parse result is out of range.  Note
+// that since byte is identical to uint8 and rune is identical to
 // uint32, and these types are all handled via textual parsing of
-// digits (this matches fmt's behavior), Find cannot be used to
+// digits (this matches fmt's behavior), Scan cannot be used to
 // directly extract a single rune or byte from the input; for that,
 // parse into a string or []byte and use the first element.
 //
-// Pointer to string or []byte: the corresponding sub-match is
+// Pointer to string or []byte: The corresponding sub-match is
 // stored in the pointed-to object.  When storing into a []byte, no
 // copying is done, and the stored slice is an alias of the input.
 //
-// func([]byte) error: the function is called with the corresponding
-// sub-match.  If the result is a non-nil error, the Find call fails
+// func([]byte) error: The function is passed the corresponding
+// sub-match.  If the result is a non-nil error, the Scan call fails
 // with that error. Pass in such a function to provide custom parsing
 // of an already supported type (e.g., treating a number as decimal
 // even if it starts with "0"), or parsing for an unsupported type
 // (e.g., time.Duration).
 //
-// An error is returned if a result does not have one of the preceding
+// An error is returned if output[i] does not have one of the preceding
 // types.  Caveat: the set of supported types might be extended in the
 // future.
-func Find(re *regexp.Regexp, input []byte, result ...interface{}) error {
+//
+// Extra sub-matches (ones with no corresponding output) are discarded silently.
+func Scan(re *regexp.Regexp, input []byte, output ...interface{}) error {
 	matches := re.FindSubmatchIndex(input)
 	if matches == nil {
-		return fmt.Errorf(`re.Find: could not find "%s" in "%s"`,
+		return fmt.Errorf(`re.Scan: could not find "%s" in "%s"`,
 			re, input)
 	}
-	if len(matches) < 2+2*len(result) {
-		return fmt.Errorf(`re.Find: only got %d matches from "%s"; need at least %d`,
-			len(matches)/2-1, re, len(result))
+	if len(matches) < 2+2*len(output) {
+		return fmt.Errorf(`re.Scan: only got %d matches from "%s"; need at least %d`,
+			len(matches)/2-1, re, len(output))
 	}
-	for i, r := range result {
+	for i, r := range output {
 		start, limit := matches[2+2*i], matches[2+2*i+1]
 		if start < 0 || limit < 0 {
 			// Sub-expression is missing; treat as empty.
@@ -186,5 +187,5 @@ func assign(r interface{}, b []byte) error {
 }
 
 func parseError(explanation string, b []byte) error {
-	return fmt.Errorf(`re.Find: parsing "%s": %s`, b, explanation)
+	return fmt.Errorf(`re.Scan: parsing "%s": %s`, b, explanation)
 }

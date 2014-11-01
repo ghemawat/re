@@ -15,7 +15,7 @@ func check(err error) {
 }
 
 // Parse a line of ls -l output into its fields.
-func ExampleFind() {
+func ExampleScan() {
 	var f struct {
 		mode, user, group, date, name string
 		nlinks, size                  int64
@@ -26,7 +26,7 @@ func ExampleFind() {
 
 	// Match line to regexp and extract properties into struct.
 	line := "-rwxr-xr-x 1 root root 110080 2014-03-24  /bin/ls"
-	err := re.Find(r, []byte(line), &f.mode, &f.nlinks, &f.user, &f.group, &f.size, &f.date, &f.name)
+	err := re.Scan(r, []byte(line), &f.mode, &f.nlinks, &f.user, &f.group, &f.size, &f.date, &f.name)
 	check(err)
 	fmt.Printf("%+v\n", f)
 	// Output:
@@ -34,7 +34,7 @@ func ExampleFind() {
 }
 
 // Use a custom parsing function that parses a number in binary.
-func ExampleFind_binaryNumber() {
+func ExampleScan_binaryNumber() {
 	var number uint64
 	parseBinary := func(b []byte) (err error) {
 		number, err = strconv.ParseUint(string(b), 2, 64)
@@ -42,7 +42,7 @@ func ExampleFind_binaryNumber() {
 	}
 
 	r := regexp.MustCompile(`([01]+)`)
-	err := re.Find(r, []byte("1001"), parseBinary)
+	err := re.Scan(r, []byte("1001"), parseBinary)
 	check(err)
 	fmt.Println(number)
 	// Output:
@@ -50,7 +50,7 @@ func ExampleFind_binaryNumber() {
 }
 
 // Define a reusable mechanism for parsing time.Duration and use it.
-func ExampleFind_parseDuration() {
+func ExampleScan_parseDuration() {
 	// parseDuration(&d) returns a parser that stores its result in *d.
 	parseDuration := func(d *time.Duration) func([]byte) error {
 		return func(b []byte) (err error) {
@@ -61,7 +61,7 @@ func ExampleFind_parseDuration() {
 
 	r := regexp.MustCompile(`([\d\w.]*)`)
 	var interval time.Duration
-	err := re.Find(r, []byte("200s"), parseDuration(&interval))
+	err := re.Scan(r, []byte("200s"), parseDuration(&interval))
 	check(err)
 	fmt.Println(interval)
 	// Output:
