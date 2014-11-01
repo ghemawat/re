@@ -21,11 +21,13 @@ func ExampleScan() {
 		nlinks, size                  int64
 	}
 
-	// A regexp that matches a line of `ls -l --time-style=iso` output.
-	r := regexp.MustCompile(`^(.{10}) +(\d+) +(\w+) +(\w+) +(\d+) +(\S+) +(\S+)`)
+	// Sample output from `ls -l --time-style=iso`
+	line := "-rwxr-xr-x 1 root root 110080 2014-03-24  /bin/ls"
+
+	// A regexp that matches such lines.
+	r := regexp.MustCompile(`^(.{10}) +(\d+) +(\w+) +(\w+) +(\d+) +(\S+) +(.+)$`)
 
 	// Match line to regexp and extract properties into struct.
-	line := "-rwxr-xr-x 1 root root 110080 2014-03-24  /bin/ls"
 	err := re.Scan(r, []byte(line), &f.mode, &f.nlinks, &f.user, &f.group, &f.size, &f.date, &f.name)
 	check(err)
 	fmt.Printf("%+v\n", f)
@@ -49,7 +51,7 @@ func ExampleScan_binaryNumber() {
 	// 9
 }
 
-// Define a reusable mechanism for parsing time.Duration and use it.
+// Use a custom re-usable parser for time.Duration.
 func ExampleScan_parseDuration() {
 	// parseDuration(&d) returns a parser that stores its result in *d.
 	parseDuration := func(d *time.Duration) func([]byte) error {
@@ -59,9 +61,9 @@ func ExampleScan_parseDuration() {
 		}
 	}
 
-	r := regexp.MustCompile(`([\d\w.]*)`)
+	r := regexp.MustCompile(`^elapsed: (.*)$`)
 	var interval time.Duration
-	err := re.Scan(r, []byte("200s"), parseDuration(&interval))
+	err := re.Scan(r, []byte("elapsed: 200s"), parseDuration(&interval))
 	check(err)
 	fmt.Println(interval)
 	// Output:

@@ -28,28 +28,31 @@ import (
 //
 // nil: The corresponding sub-match is discarded without being saved.
 //
-// Pointer to a built-in numeric types (*int, *int8, *int16, *int32,
-// *int64, *uint, *uintptr, *uint8, *uint16, *uint32, *uint64,
-// *float32, *float64): The corresponding sub-match will be parsed as
-// a literal of the numeric type and the result stored into
-// *output[i].  Scan will return an error if the sub-match cannot be
-// parsed successfully, or the parse result is out of range.  Note
-// that since byte is identical to uint8 and rune is identical to
-// uint32, and these types are all handled via textual parsing of
-// digits (this matches fmt's behavior), Scan cannot be used to
-// directly extract a single rune or byte from the input; for that,
-// parse into a string or []byte and use the first element.
-//
 // Pointer to string or []byte: The corresponding sub-match is
 // stored in the pointed-to object.  When storing into a []byte, no
 // copying is done, and the stored slice is an alias of the input.
 //
+// Pointer to some built-in numeric types (int, int8, int16, int32,
+// int64, uint, uintptr, uint8, uint16, uint32, uint64, float32,
+// float64): The corresponding sub-match will be parsed as a literal
+// of the numeric type and the result stored into *output[i].  Scan
+// will return an error if the sub-match cannot be parsed
+// successfully, or the parse result is out of range for the type.
+//
+// Pointer to a rune or a byte: rune is an alias of uint32 and byte is
+// an alias of uint8, so the preceding rule applies; i.e., Scan treats
+// the input as a string of digits to be parsed into the rune or
+// byte. Therefore Scan cannot be used to directly extract a single
+// rune or byte from the input. For that, parse into a string or
+// []byte and use the first element, or pass in a custom parsing
+// function (see below).
+//
 // func([]byte) error: The function is passed the corresponding
 // sub-match.  If the result is a non-nil error, the Scan call fails
-// with that error. Pass in such a function to provide custom parsing
-// of an already supported type (e.g., treating a number as decimal
-// even if it starts with "0"), or parsing for an unsupported type
-// (e.g., time.Duration).
+// with that error. Pass in such a function to provide custom parsing:
+// e.g., treating a number as decimal even if it starts with "0"
+// (normally Scan would treat such as a number as octal); or parsing
+// an otherwise unsupported type like time.Duration.
 //
 // An error is returned if output[i] does not have one of the preceding
 // types.  Caveat: the set of supported types might be extended in the
