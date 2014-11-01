@@ -34,7 +34,7 @@ func ExampleFind() {
 }
 
 // Use a custom parsing function that parses a number in binary.
-func ExampleFind_customParsing() {
+func ExampleFind_binaryNumber() {
 	var number uint64
 	parseBinary := func(b []byte) (err error) {
 		number, err = strconv.ParseUint(string(b), 2, 64)
@@ -50,7 +50,8 @@ func ExampleFind_customParsing() {
 }
 
 // Define a reusable mechanism for parsing time.Duration and use it.
-func ExampleFind_supportNewType() {
+func ExampleFind_parseDuration() {
+	// parseDuration(&d) returns a parser that stores its result in *d.
 	parseDuration := func(d *time.Duration) func([]byte) error {
 		return func(b []byte) (err error) {
 			*d, err = time.ParseDuration(string(b))
@@ -58,9 +59,9 @@ func ExampleFind_supportNewType() {
 		}
 	}
 
-	r := regexp.MustCompile(`(.*)`)
+	r := regexp.MustCompile(`([\d\w.]*)`)
 	var interval time.Duration
-	err := re.Find(r, []byte("3m20s"), parseDuration(&interval))
+	err := re.Find(r, []byte("200s"), parseDuration(&interval))
 	check(err)
 	fmt.Println(interval)
 	// Output:

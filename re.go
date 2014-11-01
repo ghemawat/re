@@ -38,7 +38,7 @@ import (
 // Note that since byte is identical to uint8 and rune is identical to
 // uint32, and these types are all handled via textual parsing of
 // digits (this matches fmt's behavior), Find cannot be used to
-// directly extract a single rune or byte in the input; for that,
+// directly extract a single rune or byte from the input; for that,
 // parse into a string or []byte and use the first element.
 //
 // Pointer to string or []byte: the corresponding sub-match is
