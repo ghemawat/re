@@ -2,10 +2,11 @@ package re_test
 
 import (
 	"fmt"
-	"re"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/ghemawat/re"
 )
 
 func check(err error) {

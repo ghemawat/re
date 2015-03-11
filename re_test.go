@@ -2,10 +2,11 @@ package re_test
 
 import (
 	"fmt"
-	"re"
 	"reflect"
 	"regexp"
 	"testing"
+
+	"github.com/ghemawat/re"
 )
 
 func TestFind(t *testing.T) {
