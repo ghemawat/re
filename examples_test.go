@@ -9,12 +9,6 @@ import (
 	"github.com/ghemawat/re"
 )
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 // Parse a line of ls -l output into its fields.
 func ExampleScan() {
 	var f struct {
@@ -29,8 +23,9 @@ func ExampleScan() {
 	r := regexp.MustCompile(`^(.{10}) +(\d+) +(\w+) +(\w+) +(\d+) +(\S+) +(.+)$`)
 
 	// Match line to regexp and extract properties into struct.
-	err := re.Scan(r, []byte(line), &f.mode, &f.nlinks, &f.user, &f.group, &f.size, &f.date, &f.name)
-	check(err)
+	if err := re.Scan(r, []byte(line), &f.mode, &f.nlinks, &f.user, &f.group, &f.size, &f.date, &f.name); err != nil {
+		panic(err)
+	}
 	fmt.Printf("%+v\n", f)
 	// Output:
 	// {mode:-rwxr-xr-x user:root group:root date:2014-03-24 name:/bin/ls nlinks:1 size:110080}
@@ -45,8 +40,9 @@ func ExampleScan_binaryNumber() {
 	}
 
 	r := regexp.MustCompile(`([01]+)`)
-	err := re.Scan(r, []byte("1001"), parseBinary)
-	check(err)
+	if err := re.Scan(r, []byte("1001"), parseBinary); err != nil {
+		panic(err)
+	}
 	fmt.Println(number)
 	// Output:
 	// 9
@@ -64,8 +60,9 @@ func ExampleScan_parseDuration() {
 
 	r := regexp.MustCompile(`^elapsed: (.*)$`)
 	var interval time.Duration
-	err := re.Scan(r, []byte("elapsed: 200s"), parseDuration(&interval))
-	check(err)
+	if err := re.Scan(r, []byte("elapsed: 200s"), parseDuration(&interval)); err != nil {
+		panic(err)
+	}
 	fmt.Println(interval)
 	// Output:
 	// 3m20s
