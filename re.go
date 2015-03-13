@@ -106,92 +106,92 @@ func assign(r interface{}, b []byte) error {
 	case *[]byte:
 		*v = b
 	case *int:
-		if i, err := strconv.ParseInt(string(b), 0, 64); err != nil {
+		i, err := strconv.ParseInt(string(b), 0, 64)
+		if err != nil {
 			return err
-		} else {
-			if int64(int(i)) != i {
-				return parseError("out of range for int", b)
-			}
-			*v = int(i)
 		}
+		if int64(int(i)) != i {
+			return parseError("out of range for int", b)
+		}
+		*v = int(i)
 	case *int8:
-		if i, err := strconv.ParseInt(string(b), 0, 8); err != nil {
+		i, err := strconv.ParseInt(string(b), 0, 8)
+		if err != nil {
 			return err
-		} else {
-			*v = int8(i)
 		}
+		*v = int8(i)
 	case *int16:
-		if i, err := strconv.ParseInt(string(b), 0, 16); err != nil {
+		i, err := strconv.ParseInt(string(b), 0, 16)
+		if err != nil {
 			return err
-		} else {
-			*v = int16(i)
 		}
+		*v = int16(i)
 	case *int32:
-		if i, err := strconv.ParseInt(string(b), 0, 32); err != nil {
+		i, err := strconv.ParseInt(string(b), 0, 32)
+		if err != nil {
 			return err
-		} else {
-			*v = int32(i)
 		}
+		*v = int32(i)
 	case *int64:
-		if i, err := strconv.ParseInt(string(b), 0, 64); err != nil {
+		i, err := strconv.ParseInt(string(b), 0, 64)
+		if err != nil {
 			return err
-		} else {
-			*v = i
 		}
+		*v = i
 	case *uint:
-		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
+		u, err := strconv.ParseUint(string(b), 0, 64)
+		if err != nil {
 			return err
-		} else {
-			if uint64(uint(u)) != u {
-				return parseError("out of range for uint", b)
-			}
-			*v = uint(u)
 		}
+		if uint64(uint(u)) != u {
+			return parseError("out of range for uint", b)
+		}
+		*v = uint(u)
 	case *uintptr:
-		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
+		u, err := strconv.ParseUint(string(b), 0, 64)
+		if err != nil {
 			return err
-		} else {
-			if uint64(uintptr(u)) != u {
-				return parseError("out of range for uintptr", b)
-			}
-			*v = uintptr(u)
 		}
+		if uint64(uintptr(u)) != u {
+			return parseError("out of range for uintptr", b)
+		}
+		*v = uintptr(u)
 	case *uint8:
-		if u, err := strconv.ParseUint(string(b), 0, 8); err != nil {
+		u, err := strconv.ParseUint(string(b), 0, 8)
+		if err != nil {
 			return err
-		} else {
-			*v = uint8(u)
 		}
+		*v = uint8(u)
 	case *uint16:
-		if u, err := strconv.ParseUint(string(b), 0, 16); err != nil {
+		u, err := strconv.ParseUint(string(b), 0, 16)
+		if err != nil {
 			return err
-		} else {
-			*v = uint16(u)
 		}
+		*v = uint16(u)
 	case *uint32:
-		if u, err := strconv.ParseUint(string(b), 0, 32); err != nil {
+		u, err := strconv.ParseUint(string(b), 0, 32)
+		if err != nil {
 			return err
-		} else {
-			*v = uint32(u)
 		}
+		*v = uint32(u)
 	case *uint64:
-		if u, err := strconv.ParseUint(string(b), 0, 64); err != nil {
+		u, err := strconv.ParseUint(string(b), 0, 64)
+		if err != nil {
 			return err
-		} else {
-			*v = u
 		}
+		*v = u
 	case *float32:
-		if f, err := strconv.ParseFloat(string(b), 32); err != nil {
+		f, err := strconv.ParseFloat(string(b), 32)
+		if err != nil {
 			return err
-		} else {
-			*v = float32(f)
 		}
+		*v = float32(f)
 	case *float64:
-		if f, err := strconv.ParseFloat(string(b), 64); err != nil {
+		f, err := strconv.ParseFloat(string(b), 64)
+		if err != nil {
 			return err
-		} else {
-			*v = f
 		}
+		*v = f
 	default:
 		t := reflect.ValueOf(r).Type()
 		return parseError(fmt.Sprintf("unsupported type %s", t), b)
