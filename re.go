@@ -23,6 +23,7 @@ custom parsing.
 package re
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -42,6 +43,10 @@ type Span struct {
 	Start int
 	End   int
 }
+
+var (
+	NotFound = errors.New("not found")
+)
 
 // Scan returns nil if regular expression re matches somewhere in
 // input, and for every non-nil entry in output, the corresponding
@@ -86,8 +91,7 @@ type Span struct {
 func Scan(re *regexp.Regexp, input []byte, output ...interface{}) error {
 	matches := re.FindSubmatchIndex(input)
 	if matches == nil {
-		return fmt.Errorf(`re.Scan: could not find "%s" in "%s"`,
-			re, input)
+		return fmt.Errorf("regular expression %q: %w", re, NotFound)
 	}
 	if len(matches) < 2+2*len(output) {
 		return fmt.Errorf(`re.Scan: only got %d matches from "%s"; need at least %d`,

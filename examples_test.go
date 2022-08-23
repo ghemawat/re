@@ -1,6 +1,7 @@
 package re_test
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -79,9 +80,13 @@ func ExampleScan_repeatedly() {
 			port int
 		)
 		err := re.Scan(r, line, &span, &host, &port)
-		if err != nil {
+		if errors.Is(err, re.NotFound) {
 			// Terminate the loop. We're done scanning.
 			break
+		} else if err != nil {
+			// If this wasn't example code, we'd return the error to the caller here.
+			fmt.Println("Error encountered:", err)
+			return
 		}
 
 		fmt.Println("host:", host, "port:", port)

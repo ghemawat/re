@@ -1,6 +1,7 @@
 package re_test
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -268,8 +269,8 @@ func TestSpan(t *testing.T) {
 			var port int
 
 			err := re.Scan(pattern, input, &span, &host, &port)
-			if err == nil {
-				t.Errorf("Scan attempt %d: missing expected 'no match' error", len(c.matches))
+			if !errors.Is(err, re.NotFound) {
+				t.Errorf("Scan attempt %d: Error was %v, want an error that wraps %v", len(c.matches), err, re.NotFound)
 			}
 		})
 	}
