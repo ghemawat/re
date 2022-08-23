@@ -67,3 +67,27 @@ func ExampleScan_parseDuration() {
 	// Output:
 	// 3m20s
 }
+
+func ExampleScan_repeatedly() {
+	line := []byte("www.google.com:1234 www.google.com:2345")
+	r := regexp.MustCompile(`((\S+):(\d+))`)
+
+	for {
+		var (
+			span re.Span
+			host string
+			port int
+		)
+		err := re.Scan(r, line, &span, &host, &port)
+		if err != nil {
+			// Terminate the loop. We're done scanning.
+			break
+		}
+
+		fmt.Println("host:", host, "port:", port)
+		line = line[span.End:]
+	}
+	// Output:
+	// host: www.google.com port: 1234
+	// host: www.google.com port: 2345
+}
