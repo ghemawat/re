@@ -23,10 +23,29 @@ custom parsing.
 package re
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
+)
+
+// Span is a special type designed to be passed via pointer to Scan.  re.Scan
+// will store the starting and ending offsets of the corresponding regular
+// expression capture group into the Span.
+//
+// This type can be placed anywhere within the list of arguments to scan, but
+// the most typical usage is to find the entire extent of the match, which can
+// be achieved by placing it third (immediately after the regular expression
+// and input), and wrapping the entire regexp in parentheses so that the Span
+// is filled with the extent of the entire match.
+type Span struct {
+	Start int
+	End   int
+}
+
+var (
+	NotFound = errors.New("not found")
 )
 
 // Scan returns nil if regular expression re matches somewhere in
@@ -72,28 +91,29 @@ import (
 func Scan(re *regexp.Regexp, input []byte, output ...interface{}) error {
 	matches := re.FindSubmatchIndex(input)
 	if matches == nil {
-		return fmt.Errorf(`re.Scan: could not find "%s" in "%s"`,
-			re, input)
+		return fmt.Errorf("regular expression %q: %w", re, NotFound)
 	}
 	if len(matches) < 2+2*len(output) {
 		return fmt.Errorf(`re.Scan: only got %d matches from "%s"; need at least %d`,
 			len(matches)/2-1, re, len(output))
 	}
 	for i, r := range output {
-		start, limit := matches[2+2*i], matches[2+2*i+1]
-		if start < 0 || limit < 0 {
-			// Sub-expression is missing; treat as empty.
-			start = 0
-			limit = 0
+		span := Span{
+			Start: matches[2+2*i],
+			End:   matches[2+2*i+1],
 		}
-		if err := assign(r, input[start:limit]); err != nil {
+		var submatch []byte
+		if span.Start > -1 && span.End >= span.Start {
+			submatch = input[span.Start:span.End]
+		}
+		if err := assign(r, submatch, span); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func assign(r interface{}, b []byte) error {
+func assign(r interface{}, b []byte, s Span) error {
 	switch v := r.(type) {
 	case nil:
 		// Discard the match.
@@ -101,6 +121,8 @@ func assign(r interface{}, b []byte) error {
 		if err := v(b); err != nil {
 			return err
 		}
+	case *Span:
+		*v = s
 	case *string:
 		*v = string(b)
 	case *[]byte:

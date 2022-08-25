@@ -1,6 +1,7 @@
 package re_test
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -66,4 +67,32 @@ func ExampleScan_parseDuration() {
 	fmt.Println(interval)
 	// Output:
 	// 3m20s
+}
+
+func ExampleScan_repeatedly() {
+	line := []byte("www.google.com:1234 www.google.com:2345")
+	r := regexp.MustCompile(`((\S+):(\d+))`)
+
+	for {
+		var (
+			span re.Span
+			host string
+			port int
+		)
+		err := re.Scan(r, line, &span, &host, &port)
+		if errors.Is(err, re.NotFound) {
+			// Terminate the loop. We're done scanning.
+			break
+		} else if err != nil {
+			// If this wasn't example code, we'd return the error to the caller here.
+			fmt.Println("Error encountered:", err)
+			return
+		}
+
+		fmt.Println("host:", host, "port:", port)
+		line = line[span.End:]
+	}
+	// Output:
+	// host: www.google.com port: 1234
+	// host: www.google.com port: 2345
 }
