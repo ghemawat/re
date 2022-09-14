@@ -113,6 +113,12 @@ func Scan(re *regexp.Regexp, input []byte, output ...interface{}) error {
 	return nil
 }
 
+// ScanString behaves the same as Scan, but it matches the regexp against a
+// string, rather than a byte array.
+func ScanString(re *regexp.Regexp, input string, output ...interface{}) error {
+	return Scan(re, []byte(input), output...)
+}
+
 func assign(r interface{}, b []byte, s Span) error {
 	switch v := r.(type) {
 	case nil:
